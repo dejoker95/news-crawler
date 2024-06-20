@@ -1,0 +1,45 @@
+PUT _index_template/template_articles
+{
+    "index_patterns": [
+      "articles-*"
+    ],
+    "data_stream": {
+        "timestamp_field": "pubdate"
+    },
+    "template": {
+      "aliases": {
+        "articles": {}
+      },
+      "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0
+      },
+      "mappings": {
+        "properties": {
+          "date": {
+            "type": "date",
+            "format": "basic_date_time_no_millis"
+          },
+          "keyword": {
+            "type": "text"
+          },
+          "originallink": {
+            "type": "text"
+          },
+          "link": {
+            "type": "text"
+          },
+          "pubdate": {
+            "type": "date",
+            "format": "basic_date_time_no_millis"
+          },
+          "title": {
+            "type": "text"
+          },
+          "description": {
+            "type": "text"
+          }
+        }
+      }
+    }
+  }
