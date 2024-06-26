@@ -1,6 +1,22 @@
-import pytz
 import requests
-from datetime import date, datetime, timedelta
+import pytz
+from datetime import datetime, timedelta
+from pytrends.request import TrendReq
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+class KeywordCrawler:
+    def __init__(self):
+        pass
+
+    def get_google_trends(hl, tz, pn):
+        pytrends = TrendReq(hl=hl, tz=tz)
+        trends_df = pytrends.trending_searches(pn=pn)
+        return trends_df[0].to_list()
 
 class NaverApiCrawler:
 
@@ -9,7 +25,7 @@ class NaverApiCrawler:
         self.client_secret = client_secret
         self.endpoint = endpoint
         self.headers = {'X-Naver-Client-Id': self.client_id, 'X-Naver-Client-Secret': self.client_secret}
-        
+
     def get_articles(self, keyword, cnt, sort_option):
         params = {
             'query': keyword,
@@ -46,7 +62,7 @@ class NaverApiCrawler:
             else:
                 break
         return self.transform_articles(articles)
-    
+
     def transform_articles(self, articles):
         articles = self.add_article_id(articles)
         articles = self.filter_naver_domain(articles)
@@ -80,5 +96,16 @@ class NaverApiCrawler:
             article['has_content'] = False
         return articles
 
-    
-        
+
+class WebCrawler:
+    def __init__(self):
+        options = Options()
+        options.add_argument("--headless")
+        self.driver = webdriver.Chrome(options=options)
+
+    def crawl_naver_news(self, url, timeout):
+        self.driver.get(url)
+        WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, "_article_content")))
+        title = self.driver.find_element(By.XPATH, "/html/head/title").get_attribute("innerText")
+        description = "\n".join([element.get_attribute("innerText") for element in self.driver.find_elements(By.CLASS_NAME, "_article_content")])
+        return title, description

@@ -3,10 +3,8 @@ import os
 import time
 import multiprocessing
 from dotenv import load_dotenv
-from tools.google_trends import get_trends
-from tools.news_crawler import NaverApiCrawler
-from tools.mongo_handler import MongoHandler
-from tools.webcrawler import WebCrawler
+from tools.handlers import MongoHandler
+from tools.crawlers import KeywordCrawler, NaverApiCrawler, WebCrawler
 
 # 환경변수 로드
 load_dotenv()
