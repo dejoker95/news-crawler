@@ -1,0 +1,87 @@
+name: news-app
+services:
+  redis:
+    image: redis:${REDIS_VERSION}
+    container_name: ${REDIS_CONTAINER_NAME}
+    ports:
+      - "6379:6379"
+    networks:
+      - news-net
+
+  redis-consumer:
+    build:
+      context: ../consumer
+      dockerfile: Dockerfile
+    shm_size: '512m'
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - elasticsearch
+    deploy:
+      replicas: 1
+    networks:
+      - news-net
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION}
+    container_name: ${ELASTICSEARCH_CONTAINER_NAME}
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ELASTIC_PASSWORD=${ELASTICSEARCH_ADMIN_PASSWORD}
+      - xpack.security.http.ssl.enabled=false
+      - xpack.license.self_generated.type=trial
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - news_es_data:/usr/share/elasticsearch/data
+    networks:
+      - news-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTICSEARCH_VERSION}
+    container_name: ${KIBANA_CONTAINER_NAME}
+    environment:
+      - ELASTICSEARCH_URL=http://${ELASTICSEARCH_CONTAINER_NAME}:9200
+      - ELASTICSEARCH_HOSTS=http://${ELASTICSEARCH_CONTAINER_NAME}:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - "xpack.security.enabled=false"
+      - "xpack.license.self_generated.type=trial"
+    ports:
+      - "5601:5601"
+    networks:
+      - news-net
+
+  init-elasticsearch:
+    image: appropriate/curl
+    container_name: init-elasticsearch
+    depends_on:
+      - elasticsearch
+    env_file:
+      - .env
+    volumes:
+      - ./config/articles_template.json:/articles_template.json
+    entrypoint: >
+      sh -c "
+      echo 'Waiting for Elasticsearch to be up...';
+      until curl -s -u elastic:${ELASTICSEARCH_ADMIN_PASSWORD} http://${ELASTICSEARCH_CONTAINER_NAME}:9200; do
+        sleep 5;
+      done;
+      echo 'Set Kibana password';
+      curl -s -X PUT -H 'Content-Type: application/json' -uelastic:${ELASTICSEARCH_ADMIN_PASSWORD} -d '{\"password\":\"$KIBANA_SYSTEM_PASSWORD\"}' 'http://${ELASTICSEARCH_CONTAINER_NAME}:9200/_security/user/kibana_system/_password';
+      echo 'Creating index template...';
+      curl -s -X POST -H 'Content-Type: application/json' -uelastic:${ELASTICSEARCH_ADMIN_PASSWORD} -d @/articles_template.json 'http://${ELASTICSEARCH_CONTAINER_NAME}:9200/_index_template/${ARTICLE_INDEX_PREFIX}';
+      echo 'Index template created.';
+      "
+    networks:
+      - news-net
+
+volumes:
+  news_es_data:
+
+networks:
+  news-net:
+    driver: bridge

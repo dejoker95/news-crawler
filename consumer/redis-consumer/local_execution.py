@@ -3,8 +3,7 @@ import os
 import time
 import multiprocessing
 from dotenv import load_dotenv
-from tools.handlers import MongoHandler
-from tools.crawlers import KeywordCrawler, NaverApiCrawler, WebCrawler
+from tools.crawlers import MongoHandler, NaverApiCrawler, WebCrawler
 
 # 환경변수 로드
 load_dotenv()
@@ -12,11 +11,8 @@ load_dotenv()
 NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
 NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
 NAVER_API_ENDPOINT = os.getenv('NAVER_API_ENDPOINT')
-DAYS = os.get_env("DAYS")
-MONGODB_HOST = os.getenv('MONGODB_HOST')
-MONGODB_PORT = int(os.getenv('MONGODB_PORT'))
-MONGODB_DATABASE = os.getenv('MONGODB_DATABASE')
-MONGODB_COLLECTION = os.getenv('MONGODB_COLLECTION')
+DAYS = int(os.getenv("DAYS"))
+
 SELENIUM_TIMEOUT_SECONDS = int(os.getenv('SELENIUM_TIMEOUT_SECONDS'))
 ENABLE_MULTIPROCESSING = int(os.getenv("ENABLE_MULTIPROCESSING"))
 N_PROCESS = int(os.getenv("N_PROCESS"))

@@ -1,0 +1,34 @@
+{
+  "index_patterns": ["articles-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1
+    },
+    "mappings": {
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "title": {
+          "type": "text"
+        },
+        "originallink": {
+          "type": "text"
+        },
+        "link": {
+          "type": "text"
+        },
+        "description": {
+          "type": "text"
+        },
+        "pubDate": {
+          "type": "date"
+        }
+      }
+    },
+    "aliases": {
+      "articles": { }
+    }
+  },
+  "priority": 500
+}
