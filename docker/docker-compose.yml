@@ -1,5 +1,18 @@
 name: news-app
 services:
+
+  mysql:
+    image: mysql:${MYSQL_VERSION}
+    container_name: ${MYSQL_CONTAINER_NAME}
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - news-mysql-data:/var/lib/mysql
+    networks:
+      - news-net
+
   redis:
     image: redis:${REDIS_VERSION}
     container_name: ${REDIS_CONTAINER_NAME}
@@ -12,14 +25,14 @@ services:
     build:
       context: ../consumer
       dockerfile: Dockerfile
-    shm_size: '512m'
+    shm_size: '256m'
     env_file:
       - .env
     depends_on:
       - redis
       - elasticsearch
     deploy:
-      replicas: 1
+      replicas: 2
     networks:
       - news-net
 
@@ -36,7 +49,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - news_es_data:/usr/share/elasticsearch/data
+      - news-es-data:/usr/share/elasticsearch/data
     networks:
       - news-net
 
@@ -63,7 +76,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./config/articles_template.json:/articles_template.json
+      - ./init/articles_template.json:/articles_template.json
     entrypoint: >
       sh -c "
       echo 'Waiting for Elasticsearch to be up...';
@@ -80,7 +93,8 @@ services:
       - news-net
 
 volumes:
-  news_es_data:
+  news-es-data:
+  news-mysql-data:
 
 networks:
   news-net:
