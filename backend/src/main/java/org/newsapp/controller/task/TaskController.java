@@ -1,11 +1,11 @@
-package org.newsapp.controller;
+package org.newsapp.controller.task;
 
 
 import lombok.RequiredArgsConstructor;
 import org.newsapp.domain.task.Task;
 import org.newsapp.dto.task.TaskRequestDTO;
 import org.newsapp.dto.task.TaskResponseDTO;
-import org.newsapp.service.TaskService;
+import org.newsapp.service.task.TaskService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

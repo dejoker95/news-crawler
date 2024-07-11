@@ -1,4 +1,4 @@
-package org.newsapp.repository;
+package org.newsapp.repository.task;
 
 import org.newsapp.domain.task.Task;
 import org.springframework.data.jpa.repository.JpaRepository;

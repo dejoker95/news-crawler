@@ -1,4 +1,4 @@
-package org.newsapp.domain;
+package org.newsapp.domain.task;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,6 +17,7 @@ public class Task {
     private Long id;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id")
     private List<TaskRun> taskRuns;
 
     @Column(nullable = false, unique = true)

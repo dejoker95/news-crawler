@@ -1,30 +1,30 @@
 package org.newsapp.dto.task;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.newsapp.domain.Task;
+import lombok.*;
+import org.newsapp.domain.task.Task;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @NoArgsConstructor
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Getter
-@Setter
-public class TaskResponse {
+public class TaskResponseDTO {
 
+    private Long id;
     private String name;
     private String keyword;
     private String schedule;
-    private LocalDateTime createdDate;
-    private LocalDateTime modifiedDate;
+    private Integer days;
+    private ZonedDateTime createdAt;
+    private ZonedDateTime modifiedAt;
 
-    public TaskResponse(Task task) {
+    public TaskResponseDTO(Task task) {
+        this.id = task.getId();
         this.name = task.getName();
         this.keyword = task.getKeyword();
         this.schedule = task.getSchedule();
-        this.createdDate = task.getCreatedDate();
-        this.modifiedDate = task.getModifiedDate();
+        this.days = task.getDays();
+        this.createdAt = task.getCreatedAt();
+        this.modifiedAt = task.getModifiedAt();
     }
 }

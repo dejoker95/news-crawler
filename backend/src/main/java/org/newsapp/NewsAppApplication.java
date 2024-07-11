@@ -1,2 +1,14 @@
-package org.newsapp;public class NewsAppApplication {
+package org.newsapp;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
+@EnableJpaAuditing
+@SpringBootApplication
+public class NewsAppApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(NewsAppApplication.class, args);
+    }
+
 }
