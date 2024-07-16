@@ -12,14 +12,14 @@ public class TaskRequestDTO {
     private String name;
     private String keyword;
     private String schedule;
-    private Integer days;
+    private Long hours;
 
     public Task toEntity() {
         return Task.builder()
                 .name(name)
                 .keyword(keyword)
                 .schedule(schedule)
-                .days(days)
+                .hours(hours)
                 .build();
     }
 }

@@ -28,7 +28,7 @@ class NaverApiCrawler:
         self.endpoint = os.getenv('NAVER_API_ENDPOINT')
         self.headers = {'X-Naver-Client-Id': self.client_id, 'X-Naver-Client-Secret': self.client_secret}
 
-    def get_articles(self, keyword, days):
+    def get_articles(self, keyword, hours):
         articles = []
         it = 0
         done = False
@@ -47,12 +47,12 @@ class NaverApiCrawler:
                 it += 1
             else:
                 break
-        return self.transform_articles(articles, days)
+        return self.transform_articles(articles, hours)
 
     # transform articles for Elasticsearch insert operation
-    def transform_articles(self, articles, days):
+    def transform_articles(self, articles, hours):
         articles = self.filter_naver_domain(articles)
-        articles = self.filter_days(articles, days)
+        articles = self.filter_days(articles, hours)
         for article in articles:
             article['id'] = self.add_article_id(article['link'])
         return articles
@@ -61,13 +61,12 @@ class NaverApiCrawler:
         condition = lambda x: x['originallink'] != x['link']
         return [x for x in articles if condition(x)]
     
-    def filter_days(self, articles, days):
-        past_date = self.get_past_date(days)
+    def filter_days(self, articles, hours):
+        past_date = datetime.now(tz=pytz.timezone("Asia/Seoul")) - timedelta(hours=hours)
         for article in articles:
             article['pubDate'] = self.pubdate_to_datetime(article['pubDate'])
         return [x for x in articles if past_date < x['pubDate']]
             
-
     def add_article_id(self, link):
         id = ''.join(link.split('/')[-2:])
         if '?' in id:
@@ -77,9 +76,9 @@ class NaverApiCrawler:
     def pubdate_to_datetime(self, pubdate):
         return datetime.strptime(pubdate, '%a, %d %b %Y %H:%M:%S %z')
 
-    def get_past_date(self, days):
-        today = datetime.today().replace(tzinfo=pytz.timezone('Asia/Seoul'))
-        return today - timedelta(days=days)
+    # def get_past_date(self, days):
+    #     today = datetime.today().replace(tzinfo=pytz.timezone('Asia/Seoul'))
+    #     return today - timedelta(days=days)
 
 class WebCrawler:
     def __init__(self):

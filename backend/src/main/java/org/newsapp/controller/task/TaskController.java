@@ -52,6 +52,7 @@ public class TaskController {
 
     @PostMapping("/{id}/run")
     public ResponseEntity<Void> runTask(@PathVariable Long id) {
+        taskService.runTask(id);
         return ResponseEntity.ok().build();
     }
 

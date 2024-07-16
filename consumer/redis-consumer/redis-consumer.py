@@ -1,15 +1,23 @@
 import os
+from enum import Enum
+import requests
 from dotenv import load_dotenv
 import redis
 import time
 from tools.crawlers import NaverApiCrawler, WebCrawler
 from elasticsearch import Elasticsearch, helpers
 
-def process_message(message, es_endpoint, es_user, es_password):
+class TaskStatus(Enum):
+    RUNNING = 'RUNNING'
+    DONE = 'DONE'
+    FAILED = 'FAILED'
+
+def process_message(message, es_endpoint, es_user, es_password, task_endpoint):
     # Process the message
     print('======== TASK START ========')
     print(f'Received message: {message}')
-
+    url = '/'.join([task_endpoint, message['id'], 'status'])
+    update_task_status(url, {'status': TaskStatus.RUNNING.value})
 
     # Initialize Crawlers
     naver = NaverApiCrawler()
@@ -17,27 +25,33 @@ def process_message(message, es_endpoint, es_user, es_password):
     # Initialize ES client
     es = Elasticsearch(es_endpoint, basic_auth=(es_user, es_password))
 
+    try:
     # Find articles with Naver API
-    articles = naver.get_articles(message['keyword'], int(message['days']))
-    print('Found {} articles.'.format(len(articles)))
+        articles = naver.get_articles(message['keyword'], int(message['hours']))
+        print('Found {} articles.'.format(len(articles)))
 
-    # Collect Articles with Chromium
-    i = 0
-    for article in articles:
-        try:
-            print(article['link'])
-            article['title'], article['description'] = web.crawl_naver_news(article['link'])
-            i += 1
-            print(i)
-        except Exception as e:
-            print(e)
-    print('Finished Web crawling')
+        # Collect Articles with Chromium
+        i = 0
+        for article in articles:
+            try:
+                print(article['link'])
+                article['title'], article['description'] = web.crawl_naver_news(article['link'])
+                i += 1
+                print(i)
+            except Exception as e:
+                print(e)
+        print('Finished Web crawling')
 
-    articles = list(map(transform_article, articles))
-    success, failed = helpers.bulk(es, articles)
-    es.close()
+        articles = list(map(transform_article, articles))
+        success, failed = helpers.bulk(es, articles)
+        es.close()
+    except Exception as e:
+        print(e)
+        update_task_status(url, TaskStatus.FAILED.value)
     print('Finished inserting to Elasticsearch')
     print('Success: {}, Failed: {}'.format(success, failed))
+    body = {'status': TaskStatus.DONE.value,'success': success, 'failed': len(failed)}
+    update_task_status(url, body)
     print('======== TASK FINISHED ========')
 
 def transform_article(article):
@@ -50,6 +64,12 @@ def transform_article(article):
         "_source": article
     }
     return doc
+
+def update_task_status(url, body):
+    response = requests.post(url=url, json=body)
+    print(f"Status Code: {response.status_code}")
+    print(f"Response Body: {response.text}")
+
 
 def main():
     # Load environment variables
@@ -68,6 +88,7 @@ def main():
     ELASTICSEARCH_PASSWORD = os.getenv('ELASTICSEARCH_ADMIN_PASSWORD')
     STREAM_KEY = os.getenv('REDIS_STREAM_KEY')
     CONSUMER_GROUP = os.getenv('REDIS_CONSUMER_GROUP')
+    TASK_STATUS_UPDATE_ENDPOINT = os.getenv('TASK_STATUS_UPDATE_ENDPOINT')
 
     print('======== Consumer Configuration ========')
     print("REDIS HOST: {}".format(REDIS_HOST))
@@ -96,7 +117,7 @@ def main():
             if messages:
                 for stream, message_list in messages:
                     for message_id, message in message_list:
-                        process_message(message, ELASTICSEARCH_ENDPOINT, ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD)
+                        process_message(message, ELASTICSEARCH_ENDPOINT, ELASTICSEARCH_USER, ELASTICSEARCH_PASSWORD, TASK_STATUS_UPDATE_ENDPOINT)
                         # Acknowledge the message
                         r.xack(STREAM_KEY, CONSUMER_GROUP, message_id)
         except Exception as e:

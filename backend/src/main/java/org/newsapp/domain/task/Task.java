@@ -17,7 +17,7 @@ public class Task {
     private Long id;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "task_id")
     private List<TaskRun> taskRuns;
 
     @Column(nullable = false, unique = true)
@@ -29,28 +29,28 @@ public class Task {
     private String schedule;
 
     @Column(nullable = false)
-    private Integer days;
+    private Long hours;
 
     private ZonedDateTime createdAt;
 
     private ZonedDateTime modifiedAt;
 
     @Builder
-    public Task(String name, String keyword, String schedule, Integer days) {
+    public Task(String name, String keyword, String schedule, Long hours) {
         this.name = name;
         this.keyword = keyword;
         this.schedule = schedule;
-        this.days = days;
+        this.hours = hours;
     }
 
     @PrePersist
-    public void onPrePersist() {
+    public void prePersist() {
         this.createdAt = ZonedDateTime.now();
         this.modifiedAt = ZonedDateTime.now();
     }
 
     @PreUpdate
-    public void onPreUpdate() {
+    public void preUpdate() {
         this.modifiedAt = ZonedDateTime.now();
     }
 
@@ -64,9 +64,8 @@ public class Task {
         if (request.getSchedule() != null) {
             this.schedule = request.getSchedule();
         }
-        if (request.getDays() != null) {
-            this.days = request.getDays();
+        if (request.getHours() != null) {
+            this.hours = request.getHours();
         }
     }
-
 }

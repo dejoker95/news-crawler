@@ -14,7 +14,7 @@ public class TaskResponseDTO {
     private String name;
     private String keyword;
     private String schedule;
-    private Integer days;
+    private Long hours;
     private ZonedDateTime createdAt;
     private ZonedDateTime modifiedAt;
 
@@ -23,7 +23,7 @@ public class TaskResponseDTO {
         this.name = task.getName();
         this.keyword = task.getKeyword();
         this.schedule = task.getSchedule();
-        this.days = task.getDays();
+        this.hours = task.getHours();
         this.createdAt = task.getCreatedAt();
         this.modifiedAt = task.getModifiedAt();
     }
